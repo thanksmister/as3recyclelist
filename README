@@ -1,0 +1,1 @@
+AS3 Scrolling List for Android and iOS devices built as a Flash Professional Project in Adobe Flash Builder 4. This list uses an object pool to recycle the list item renderers.  The down side is that the list no longer accomodates renderers of different height. 
