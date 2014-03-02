@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @author Michael Ritchie
  * @blog http://www.thanksmister.com
  * @twitter Thanksmister
@@ -32,11 +32,8 @@ package com.thanksmister.touchlist.controls
 {
 	import com.thanksmister.touchlist.events.TouchListItemEvent;
 	import com.thanksmister.touchlist.renderers.ITouchListItemRenderer;
-	
 	import de.polygonal.core.ObjectPool;
-	
 	import flash.display.DisplayObject;
-	import flash.display.MovieClip;
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -82,11 +79,11 @@ package com.thanksmister.touchlist.controls
 		
 		//------ Scrolling ---------------
 		
-		private var scrollBar:MovieClip;
+		private var scrollBar:Shape;
 		private var lastY:Number = 0; // last touch position
 		private var firstY:Number = 0; // first touch position
 		private var listY:Number = 0; // initial list position on touch 
-		private var diffY:Number = 0;;
+		private var diffY:Number = 0;
 		private var inertiaY:Number = 0;
 		private var minY:Number = 0;
 		private var maxY:Number = 0;
@@ -98,7 +95,7 @@ package com.thanksmister.touchlist.controls
 		
 		private var isTouching:Boolean = false;
 		private var tapDelayTime:Number = 0;
-		private var _maxTapDelayTime:Number = 5;
+		private var _maxTapDelayTime:Number = 4;
 		private var tapItem:ITouchListItemRenderer;
 		private var tapEnabled:Boolean = false;
 
@@ -233,8 +230,6 @@ package com.thanksmister.touchlist.controls
 		 * */
 		public function setSize(w:Number, h:Number):void
 		{
-			//trace("setResize");
-			
 			listWidth = w; 
 			listHeight = h;
 			
@@ -261,11 +256,8 @@ package com.thanksmister.touchlist.controls
 			renderListItems(); // rerender list
 			
 			// resize each list item
-			var children:Number = list.numChildren;
-			for (var i:int = 0; i < children; i++) {
-				var item:DisplayObject = list.getChildAt(i);
-				ITouchListItemRenderer(item).itemWidth = listWidth;
-			}
+			for each (var item:ITouchListItemRenderer in list)
+				item.itemWidth = listWidth;
 		}
 		
 		/**
@@ -314,9 +306,8 @@ package com.thanksmister.touchlist.controls
 			creatList();
 			createScrollBar();
 			
-			if(dirty) {
+			if(dirty)
 				renderListItems();
-			}
 			
 			initialized = true; // we are initialized
 		}
@@ -332,7 +323,7 @@ package com.thanksmister.touchlist.controls
 			}
 			
 			listHitArea.graphics.clear();
-			listHitArea.graphics.beginFill(0x000000, 1);
+			listHitArea.graphics.beginFill(0);
 			listHitArea.graphics.drawRect(0, 0, listWidth, listHeight)
 			listHitArea.graphics.endFill();
 			
@@ -342,7 +333,7 @@ package com.thanksmister.touchlist.controls
 			}
 			
 			list.graphics.clear();
-			list.graphics.beginFill(0x000000, 1);
+			list.graphics.beginFill(0);
 			list.graphics.drawRect(0, 0, listWidth, listHeight)
 			list.graphics.endFill();
 			list.mask = listHitArea;
@@ -354,7 +345,7 @@ package com.thanksmister.touchlist.controls
 		protected function createScrollBar():void
 		{
 			if(!scrollBar) {
-				scrollBar = new MovieClip();
+				scrollBar = new Shape();
 				addChild(scrollBar);
 			}
 			
@@ -392,9 +383,8 @@ package com.thanksmister.touchlist.controls
 			
 			listPool.allocate(numViewableItems, itemRenderer); // allocate the number of pool objects needed
 			
-			for (var i:int = 0; i < numViewableItems; i++) {
+			for (var i:int = 0; i < numViewableItems; i++)
 				addListItem(i);
-			}
 			
 			scrollListHeight = dataProvider.length * rowHeight; // scroll list is the actual height of all item renderers
 
@@ -442,7 +432,7 @@ package com.thanksmister.touchlist.controls
 		 * */
 		protected function removeListItem(removeFromTop:Boolean = true):void
 		{	
-			var listItem:DisplayObject = (removeFromTop)? visualListItems.shift():visualListItems.pop();
+			var listItem:DisplayObject = removeFromTop ? visualListItems.shift() : visualListItems.pop();
 			
 			if(!listItem) return;
 			
@@ -451,15 +441,10 @@ package com.thanksmister.touchlist.controls
 			list.removeChild(listItem);
 			
 			listPool.object = listItem; // return to pool
-				
-			if(removeFromTop) {
-				var bottomIndex:int = visualListItems.length + ITouchListItemRenderer(listItem).index + 1;
-				addListItem( bottomIndex );
-			} else {
-				var topItem:DisplayObject = visualListItems[0];
-				var topIndex:int = ITouchListItemRenderer(topItem).index - 1;
-				addListItem (topIndex, true);
-			} 
+			
+			var idx:int = removeFromTop ? visualListItems.length + ITouchListItemRenderer(listItem).index + 1 : ITouchListItemRenderer(visualListItems[0]).index - 1;
+			
+			addListItem(idx, !removeFromTop);
 		}
 		
 		/**
@@ -468,9 +453,8 @@ package com.thanksmister.touchlist.controls
 		 * */
 		protected function onRenderHandler(event:Event):void
 		{
-			if(!dataProvider || !itemRenderer|| !dirty){
-				return
-			}
+			if(!dataProvider || !itemRenderer || !dirty)
+				return;
 			
 			trace("onRenderHandler");
 			
@@ -555,12 +539,12 @@ package com.thanksmister.touchlist.controls
 		protected function onListTimer(e:Event):void
 		{
 			// test for touch or tap event
-			if(tapEnabled) {
+			if(tapEnabled)
 				onTapDelay();
-			}
 			
 			// recycle our list items on movement
-			recycleListItems();
+			if (isTouching || inertiaY)
+				recycleListItems();
 			
 			// scroll the list on mouse up
 			if(!isTouching) {
@@ -569,9 +553,8 @@ package com.thanksmister.touchlist.controls
 					inertiaY = 0;
 					list.y *= 0.3;
 					
-					if(list.y < 1) {
+					if(list.y < 1)
 						list.y = 0;
-					}
 				} else if(scrollListHeight >= listHeight && list.y < listHeight - scrollListHeight) {
 					inertiaY = 0;
 
@@ -586,9 +569,8 @@ package com.thanksmister.touchlist.controls
 					inertiaY = 0;
 					list.y *= 0.8;
 					
-					if(list.y > -1) {
+					if(list.y > -1)
 						list.y = 0;
-					}
 				}
 				
 				if( Math.abs(inertiaY) > 1) {
@@ -622,18 +604,21 @@ package com.thanksmister.touchlist.controls
 		 * */
 		protected function recycleListItems():void
 		{
-			var diffListY:Number = Math.abs(list.y);	
+			var diffListY:Number = Math.abs(list.y);
 			var itemsAdded:Number = Math.floor(diffListY/rowHeight);
 			var diff:int = Math.abs(itemsAdded - lastListItemNumber);
-			var itemIndx:Number;
+			var i:int = 0;
 		
 			if(itemsAdded != lastListItemNumber) {
-				for (var i:int = 0; i < diff; i++){
+				for (i = 0; i < diff; i++)
 					removeListItem( (itemsAdded >  lastListItemNumber) ); 
-				}
 				
 				lastListItemNumber = itemsAdded;
 			} 
+			
+			if (visualListItems.length < numViewableItems)
+				for (i = 0; i < (numViewableItems - visualListItems.length); i++)
+					addListItem(i);
 		}
 		
 		/**
