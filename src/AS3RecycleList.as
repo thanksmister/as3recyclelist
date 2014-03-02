@@ -23,9 +23,8 @@ package
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
 			
-			if(stage) 
-				onAddedToStage();
-			else
+			stage ?
+				onAddedToStage() :
 				stage.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 		}
 		
@@ -36,9 +35,9 @@ package
 			
 			// Create data provider
 			var dataProvider:Array = new Array();
-			for(var i:int = 0; i < 300; i++){
-				dataProvider.push( "This is list item " + String(i) );
-			}
+			for(var i:int = 0; i < 300; i++)
+				dataProvider.push( "This is list item " + String(i+1) );
+			
 			
 			// add our list, listeners, item renderer, and data provider
 			touchList = new TouchList(); 
